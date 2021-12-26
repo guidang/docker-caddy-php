@@ -7,8 +7,8 @@ Caddy PHP In Docker
 # Build
 ```bashgit clone https://github.com/skiy/docker-caddy-php.git
 git clone https://github.com/skiy/docker-caddy-php.git
-# like: docker build --build-arg php_image_version=8.1.0 -f Dockerfile -t caddy-php8.1 .
-docker build --build-arg php_image_version=8.1.0 -f Dockerfile -t caddy-php .
+# like: docker build --build-arg PHP_IMAGE_VER=8.1.0 -f Dockerfile -t caddy-php8.1 .
+docker build --build-arg PHP_IMAGE_VER=8.1.0 -f Dockerfile -t caddy-php .
 docker run -d -p 80:80 caddy-php
 ```
 
