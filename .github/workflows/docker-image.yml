@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: docker build
 
 on:
   push:
@@ -42,7 +42,7 @@ jobs:
     - 
       name: Build image and push to Docker Hub
       env:
-        PUSH_USER: skiy
-        PUSH_EMAIL: dev@skiy.net      
+        PUSH_USER: jetsung
+        PUSH_EMAIL: skiy@jetsung.com   
       run: |
         bash check_build.sh
