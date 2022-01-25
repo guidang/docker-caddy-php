@@ -76,7 +76,7 @@ git_push() {
     git add .
     git commit -am "Auto push git update(${UPDATE_VERSION})"
     # git push
-    git push https://${GH_TOKEN}@github.com/flydo/docker-caddy-php.git
+    git push origin main
 }
 
 build() {
