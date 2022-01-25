@@ -111,10 +111,10 @@ main() {
     . .version
 
     UPDATE_VERSION=""
+    BUILT=0
 
     for first_version in $LATEST_VERSIONS
     do
-        BUILT=0
 
         if test "$(printf '%s' $first_version | grep 7.4)"; then
             if version_gt $first_version $PHP_74; then
@@ -123,7 +123,7 @@ main() {
 
                 build "${first_version}" || exit 1
 
-                sed -i "s@^PHP_74=.*@PHP_74=${first_version}@" .version
+                sed -i "" -e "s@^PHP_74=.*@PHP_74=${first_version}@" .version
 
                 BUILT=1
             fi
@@ -134,7 +134,7 @@ main() {
 
                 build "${first_version}" || exit 1
 
-                sed -i "s@^PHP_80=.*@PHP_80=${first_version}@" .version
+                sed -i "" -e "s@^PHP_80=.*@PHP_80=${first_version}@" .version
 
                 BUILT=1
             fi
@@ -145,14 +145,16 @@ main() {
 
                 build "${first_version}" || exit 1
 
-                sed -i "s@^PHP_81=.*@PHP_81=${first_version}@" .version
+                sed -i "" -e "s@^PHP_81=.*@PHP_81=${first_version}@" .version
 
                 BUILT=1
             fi
         fi
     done
 
-    if [[ "${BUILT}" == "1" ]]; then
+    git diff
+
+    if [ "${BUILT}" = "1" ]; then
         echo "GIT PUSH"
         git_push
     fi

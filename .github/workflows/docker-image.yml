@@ -15,22 +15,62 @@ env:
   REGISTRY: docker.io    
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    outputs:
+      update: ${{ steps.check.outputs.update }}
+    
+    steps:
+    - 
+      name: check out the repo
+      uses: actions/checkout@v2 
+    -
+      id: check
+      name: check new version
+      run: | 
+        version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "${1}"; }
+
+        LATEST_VERSIONS=$(curl -s https://www.php.net | sed -n '/download-link/p' | head -n 3 | cut -d '>' -f3 | cut -d '<' -f1)
+        
+        . .version
+
+        sum=0
+        for first_version in $LATEST_VERSIONS
+        do
+          if test "$(printf '%s' $first_version | grep 7.4)"; then
+            if version_gt $first_version $PHP_74; then
+              let "sum=sum+1"
+            fi
+          elif test "$(printf '%s' $first_version | grep 8.0)"; then
+            if version_gt $first_version $PHP_80; then
+              let "sum=sum+1"
+            fi
+          elif test "$(printf '%s' $first_version | grep 8.1)"; then
+            if version_gt $first_version $PHP_81; then
+              let "sum=sum+1"
+            fi
+          fi
+        done
+
+        if [ "${sum}" ~= "0" ]; then
+          echo "::set-output name=update::true"
+        else
+          echo "::set-output name=update::false"
+        fi
+
   build:
     runs-on: ubuntu-latest
+    needs: check
+
+    if: ${{needs.check.outputs.update}} == 'true'
+
     steps:
     - 
       name: Check out the repo
       uses: actions/checkout@v2    
       # with:
         # token: ${{ secrets.GH_TOKEN }}      
-    - 
-      name: Setup QEMU
-      uses: docker/setup-qemu-action@v1
-
-    - 
-      name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v1
-    
     - 
       name: Login into registry ${{ env.REGISTRY }}   
       if: github.event_name != 'pull_request'
@@ -40,9 +80,16 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}   
     - 
+      name: Setup QEMU
+      uses: docker/setup-qemu-action@v1
+    - 
+      name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - 
       name: Build image and push to Docker Hub
       env:
         PUSH_USER: jetsung
         PUSH_EMAIL: skiy@jetsung.com   
       run: |
+        echo "update: ${{needs.check.outputs.update}}"
         bash check_build.sh

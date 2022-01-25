@@ -4,8 +4,6 @@ FROM caddy:alpine AS caddy-deps
 
 FROM php:$PHP_IMAGE_VER
 LABEL maintainer="Jetsung Chan <skiy@jetsung.com>"
-COPY --from=caddy-deps /usr/bin/caddy /usr/bin/caddy
-
 RUN set -eux ;\
     apk update && \
     apk add --no-cache --virtual \
@@ -72,12 +70,11 @@ RUN docker-php-ext-install pdo_mysql \
         libc-dev \
         g++ \
         make
-        
-RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 
+EXPOSE 80 443
 WORKDIR /app/
-
 VOLUME ["/etc/caddy", "/var/www/html"]
+COPY --from=caddy-deps /usr/bin/caddy /usr/bin/caddy
 
 COPY ./files/Caddyfile /etc/caddy/
 COPY ./files/index.php /var/www/html/
@@ -85,7 +82,6 @@ COPY ./files/supervisord.conf /etc/
 COPY ./supervisord /etc/supervisord/
 COPY ./scripts/entrypoint.sh /app/
 RUN chmod +x /app/entrypoint.sh
-
-EXPOSE 80 443
-
-ENTRYPOINT ["sh", "/app/entrypoint.sh"]
+RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["-D"]
