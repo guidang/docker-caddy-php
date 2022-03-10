@@ -87,7 +87,7 @@ build() {
     version_init "${1}"
 
     if check_alpine_exist $full_ver; then
-        echo "no image ${full_ver}-fpm-alpine"
+        show_errmsg "no image ${full_ver}-fpm-alpine"
         return 
     fi
 
@@ -100,6 +100,7 @@ build() {
     # 不使用 buildx，只编译 amd64
     # docker_tag_push
 
+    has_build=1
     docker_build
 }
 
@@ -121,33 +122,42 @@ main() {
                 echo "(NEW)$first_version is greater than (OLD)$PHP_74 !"
                 UPDATE_VERSION=" $UPDATE_VERSION $first_version"
 
+                has_build=0
                 build "${first_version}" || exit 1
 
-                sed -i "" -e "s@^PHP_74=.*@PHP_74=${first_version}@" .version
+                if [ "${has_build}" = "1" ]; then
+                    sed -i "" -e "s@^PHP_74=.*@PHP_74=${first_version}@" .version
 
-                BUILT=1
+                    BUILT=1
+                fi
             fi
         elif test "$(printf '%s' $first_version | grep 8.0)"; then
             if version_gt $first_version $PHP_80; then
                 echo "(NEW)$first_version is greater than (OLD)$PHP_80 !"
                 UPDATE_VERSION=" $UPDATE_VERSION $first_version"
 
+                has_build=0
                 build "${first_version}" || exit 1
 
-                sed -i "" -e "s@^PHP_80=.*@PHP_80=${first_version}@" .version
+                if [ "${has_build}" = "1" ]; then
+                    sed -i "" -e "s@^PHP_80=.*@PHP_80=${first_version}@" .version
 
-                BUILT=1
+                    BUILT=1
+                fi
             fi
         elif test "$(printf '%s' $first_version | grep 8.1)"; then
             if version_gt $first_version $PHP_81; then
                 echo "(NEW)$first_version is greater than (OLD)$PHP_81 !"
                 UPDATE_VERSION=" $UPDATE_VERSION $first_version"
 
+                has_build=0
                 build "${first_version}" || exit 1
 
-                sed -i "" -e "s@^PHP_81=.*@PHP_81=${first_version}@" .version
+                if [ "${has_build}" = "1" ]; then
+                    sed -i "" -e "s@^PHP_81=.*@PHP_81=${first_version}@" .version
 
-                BUILT=1
+                    BUILT=1
+                fi
             fi
         fi
     done
