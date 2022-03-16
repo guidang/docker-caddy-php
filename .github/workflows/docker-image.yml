@@ -87,9 +87,24 @@ jobs:
       uses: docker/setup-buildx-action@v1
     - 
       name: Build image and push to Docker Hub
+      id: buildx
       env:
         PUSH_USER: jetsung
         PUSH_EMAIL: skiy@jetsung.com   
       run: |
         echo "update: ${{needs.check.outputs.update}}"
         bash check_build.sh
+    - 
+      name: push
+      uses: github-actions-x/commit@v2.8
+      env:
+        PUSH_USER: jetsung
+        PUSH_EMAIL: skiy@jetsung.com   
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        push-branch: 'main'
+        commit-message: ${{ steps.buildx.outputs.git_commit }}
+        force-add: 'true'
+        files: .
+        name: jetsung
+        email: skiy@jetsung.com

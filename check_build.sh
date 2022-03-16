@@ -70,13 +70,16 @@ docker_tag_push() {
 }
 
 git_push() {
-    git config --global user.name "${PUSH_USER}"
-    git config --global user.email "${PUSH_EMAIL}"
+    # git config --global user.name "${PUSH_USER}"
+    # git config --global user.email "${PUSH_EMAIL}"
 
-    git add .
-    git commit -am "Auto push git update(${UPDATE_VERSION})"
-    # git push
-    git push origin main
+    # git add .
+    # git commit -am "Auto push git update(${UPDATE_VERSION})"
+    # # git push
+    # git push origin main
+
+    echo ::set-output name=docker_is_push::true
+    echo ::set-output name=git_commit::"mod: php version to ${UPDATE_VERSION}"
 }
 
 build() {
