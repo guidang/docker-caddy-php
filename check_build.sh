@@ -69,17 +69,10 @@ docker_tag_push() {
     fi
 }
 
-git_push() {
-    # git config --global user.name "${PUSH_USER}"
-    # git config --global user.email "${PUSH_EMAIL}"
-
-    # git add .
-    # git commit -am "Auto push git update(${UPDATE_VERSION})"
-    # # git push
-    # git push origin main
-
-    echo ::set-output name=docker_is_push::true
-    echo ::set-output name=git_commit::"mod: php version to ${UPDATE_VERSION}"
+# use github-actions-x/commit@v2.8
+git_bot_push() {
+    echo "::set-output name=git_push::true"
+    echo "::set-output name=git_commit::mod(bot): php version to ${UPDATE_VERSION}"
 }
 
 build() {
@@ -169,7 +162,7 @@ main() {
 
     if [ "${BUILT}" = "1" ]; then
         echo "GIT PUSH"
-        git_push
+        git_bot_push
     fi
 }
 
