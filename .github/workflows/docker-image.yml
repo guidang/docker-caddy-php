@@ -93,6 +93,7 @@ jobs:
         bash check_build.sh
     - 
       name: push
+      id: push
       uses: github-actions-x/commit@v2.8
       if: ${{steps.buildx.outputs.git_push}} == 'true'
       env:
@@ -104,6 +105,6 @@ jobs:
         commit-message: ${{ steps.buildx.outputs.git_commit }}
         force-add: 'true'
         files: .
-        name: ${{ PUSH_USER }}
-        email: ${{ PUSH_EMAIL }}
+        name: ${{ steps.push.env.PUSH_USER }}
+        email: ${{ steps.push.env.PUSH_EMAIL }}
 
