@@ -96,15 +96,11 @@ jobs:
       id: push
       uses: github-actions-x/commit@v2.8
       if: ${{steps.buildx.outputs.git_push}} == 'true'
-      env:
-        PUSH_USER: jetsung
-        PUSH_EMAIL: skiy@jetsung.com   
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         push-branch: 'main'
         commit-message: ${{ steps.buildx.outputs.git_commit }}
         force-add: 'true'
         files: .
-        name: ${{ steps.push.env.PUSH_USER }}
-        email: ${{ steps.push.env.PUSH_EMAIL }}
+        name: actions-bot
 
