@@ -5,8 +5,8 @@ Caddy PHP In Docker
 **Caddy-PHP:** [https://hub.docker.com/r/devcto/caddy-php](https://hub.docker.com/r/devcto/caddy-php)   
 
 # Build
-```bashgit clone https://github.com/skiy/docker-caddy-php.git
-git clone https://github.com/skiy/docker-caddy-php.git
+```bashgit clone https://github.com/jetsung/docker-caddy-php.git
+git clone https://github.com/jetsung/docker-caddy-php.git
 # like: docker build --build-arg PHP_IMAGE_VER=8.1.0 -f Dockerfile -t caddy-php8.1 .
 docker build --build-arg PHP_IMAGE_VER=8.1.0 -f Dockerfile -t caddy-php .
 docker run -d -p 80:80 caddy-php

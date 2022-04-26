@@ -14,7 +14,7 @@ version_init() {
     pre_ver=$(echo ${1}| awk -F"." '{ print $1"."$2 }')
     check_ver=$(echo ${1}| awk -F"." '{ print $1$2 }')
 
-    # printf 'full_ver: %s\npre_ver: %s\ncheck_ver: %s\n' "${full_ver}" "${pre_ver}" "${check_ver}"
+    printf 'full_ver: %s\npre_ver: %s\ncheck_ver: %s\n' "${full_ver}" "${pre_ver}" "${check_ver}"
 }
 
 check_alpine_exist() {
@@ -69,12 +69,6 @@ docker_tag_push() {
     fi
 }
 
-# use github-actions-x/commit@v2.8
-git_bot_push() {
-    echo "::set-output name=git_push::true"
-    echo "::set-output name=git_commit::mod(bot): php version to ${UPDATE_VERSION}"
-}
-
 build() {
     if [ "${1}"x = ""x ]; then
         show_errmsg "invalid argument for version"
@@ -94,76 +88,13 @@ build() {
     fi
 
     # 不使用 buildx，只编译 amd64
-    # docker_tag_push
+    docker_tag_push
 
-    has_build=1
-    docker_build
+    # docker_build
 }
 
 main() {
-    set -e
-
-    LATEST_VERSIONS=$(curl -s https://www.php.net | sed -n '/download-link/p' | head -n 3 | cut -d '>' -f3 | cut -d '<' -f1)
-
-    . .version
-
-    UPDATE_VERSION=""
-    BUILT=0
-
-    for first_version in $LATEST_VERSIONS
-    do
-
-        if test "$(printf '%s' $first_version | grep 7.4)"; then
-            if version_gt $first_version $PHP_74; then
-                echo "(NEW)$first_version is greater than (OLD)$PHP_74 !"
-                UPDATE_VERSION=" $UPDATE_VERSION $first_version"
-
-                has_build=0
-                build "${first_version}" || exit 1
-
-                if [ "${has_build}" = "1" ]; then
-                    sed -i "" -e "s@^PHP_74=.*@PHP_74=${first_version}@" .version
-
-                    BUILT=1
-                fi
-            fi
-        elif test "$(printf '%s' $first_version | grep 8.0)"; then
-            if version_gt $first_version $PHP_80; then
-                echo "(NEW)$first_version is greater than (OLD)$PHP_80 !"
-                UPDATE_VERSION=" $UPDATE_VERSION $first_version"
-
-                has_build=0
-                build "${first_version}" || exit 1
-
-                if [ "${has_build}" = "1" ]; then
-                    sed -i "" -e "s@^PHP_80=.*@PHP_80=${first_version}@" .version
-
-                    BUILT=1
-                fi
-            fi
-        elif test "$(printf '%s' $first_version | grep 8.1)"; then
-            if version_gt $first_version $PHP_81; then
-                echo "(NEW)$first_version is greater than (OLD)$PHP_81 !"
-                UPDATE_VERSION=" $UPDATE_VERSION $first_version"
-
-                has_build=0
-                build "${first_version}" || exit 1
-
-                if [ "${has_build}" = "1" ]; then
-                    sed -i "" -e "s@^PHP_81=.*@PHP_81=${first_version}@" .version
-
-                    BUILT=1
-                fi
-            fi
-        fi
-    done
-
-    git diff
-
-    if [ "${BUILT}" = "1" ]; then
-        echo "GIT PUSH"
-        git_bot_push
-    fi
+    build "${PHP_VERSION}" || exit 1
 }
 
 main "$@" || exit 1

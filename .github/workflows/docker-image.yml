@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "Dockerfile"
-      - "check_build.sh"
+      - "build.sh"
       - ".github/workflows/docker-image.yml"
       # - ".version"
   schedule:
@@ -101,5 +101,7 @@ jobs:
     - 
       name: Build image and push to Docker Hub
       if: steps.update.outputs.update == 'yes'
+      env:
+        PHP_VERSION: ${{ matrix.image-tag }}
       run: |
         bash check_build.sh
