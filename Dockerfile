@@ -3,7 +3,7 @@ ARG PHP_IMAGE_VER="8.0.14-fpm-alpine"
 FROM caddy:alpine AS caddy-deps
 
 FROM php:$PHP_IMAGE_VER
-LABEL maintainer="Jetsung Chan <skiy@jetsung.com>"
+LABEL maintainer="Jetsung Chan <jetsungchan@gmail.com>"
 RUN set -eux ;\
     apk update && \
     apk add --no-cache --virtual \
@@ -80,8 +80,9 @@ COPY ./files/Caddyfile /etc/caddy/
 COPY ./files/index.php /var/www/html/
 COPY ./files/supervisord.conf /etc/
 COPY ./supervisord /etc/supervisord/
-COPY ./scripts/entrypoint.sh /app/
-RUN chmod +x /app/entrypoint.sh
+COPY ./entry.sh /app/entry.sh
+RUN chmod +x /app/entry.sh
 RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
-ENTRYPOINT ["/app/entrypoint.sh"]
+
+ENTRYPOINT ["/app/entry.sh"]
 CMD ["-D"]

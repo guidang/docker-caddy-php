@@ -5,6 +5,7 @@ on:
     paths:
       - "Dockerfile"
       - "build.sh"
+      - "entry.sh"
       - ".github/workflows/docker-image.yml"
       # - ".version"
   schedule:
@@ -104,4 +105,4 @@ jobs:
       env:
         PHP_VERSION: ${{ matrix.image-tag }}
       run: |
-        bash check_build.sh
+        bash build.sh

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [ "${1}" = "-D" ]; then
     # start supervisord and services
