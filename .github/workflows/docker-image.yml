@@ -6,7 +6,7 @@ on:
       - "Dockerfile"
       - "check_build.sh"
       - ".github/workflows/docker-image.yml"
-      - ".version"
+      # - ".version"
   schedule:
     - cron: '0 0 * * *'    
     
@@ -15,55 +15,52 @@ env:
   REGISTRY: docker.io    
 
 jobs:
-  check:
+  image_tags:
     runs-on: ubuntu-latest
 
     outputs:
-      update: ${{ steps.check.outputs.update }}
-    
+      IMAGE_VERSION_81: ${{ steps.image_tags.outputs.IMAGE_VERSION_81 }}
+      IMAGE_VERSION_80: ${{ steps.image_tags.outputs.IMAGE_VERSION_80 }}
+      IMAGE_VERSION_74: ${{ steps.image_tags.outputs.IMAGE_VERSION_74 }}
+   
     steps:
-    - 
-      name: check out the repo
-      uses: actions/checkout@v2 
     -
-      id: check
-      name: check new version
+      id: image_tags
+      name: get image tags
+      env:
+        VERSION_URL: ${{ secrets.ENV_URL }}
       run: | 
         version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "${1}"; }
 
         LATEST_VERSIONS=$(curl -s https://www.php.net | sed -n '/download-link/p' | head -n 3 | cut -d '>' -f3 | cut -d '<' -f1)
         
-        . .version
-
-        sum=0
         for first_version in $LATEST_VERSIONS
         do
           if test "$(printf '%s' $first_version | grep 7.4)"; then
-            if version_gt $first_version $PHP_74; then
-              let "sum=sum+1"
-            fi
+            echo "::set-output name=IMAGE_VERSION_74::$first_version"
           elif test "$(printf '%s' $first_version | grep 8.0)"; then
-            if version_gt $first_version $PHP_80; then
-              let "sum=sum+1"
-            fi
+            echo "::set-output name=IMAGE_VERSION_80::$first_version"
           elif test "$(printf '%s' $first_version | grep 8.1)"; then
-            if version_gt $first_version $PHP_81; then
-              let "sum=sum+1"
-            fi
+            echo "::set-output name=IMAGE_VERSION_81::$first_version"
           fi
         done
 
-        if [ $sum -gt 0 ]; then
-          echo "::set-output name=update::true"
-        else
-          echo "::set-output name=update::false"
-        fi
-
   build:
     runs-on: ubuntu-latest
-    needs: check
+    needs: 
+      - image_tags
 
-    if: ${{needs.check.outputs.update}} == 'true'
+    strategy:
+      matrix:
+        php-version: [ "8.1", "8.0", "7.4" ]
+        include:
+          - php-version: "8.1"
+            image-tag: ${{ needs.image_tags.outputs.IMAGE_VERSION_81 }}
+          - php-version: "8.0"
+            image-tag: ${{ needs.image_tags.outputs.IMAGE_VERSION_80 }}
+          - php-version: "7.4"
+            image-tag: ${{ needs.image_tags.outputs.IMAGE_VERSION_74 }}
+      fail-fast: true
 
     steps:
     - 
@@ -86,21 +83,23 @@ jobs:
       name: Setup Docker Buildx
       uses: docker/setup-buildx-action@v1
     - 
-      name: Build image and push to Docker Hub
-      id: buildx
-      run: |
-        echo "update: ${{needs.check.outputs.update}}"
-        bash check_build.sh
-    - 
-      name: push
-      id: push
-      uses: github-actions-x/commit@v2.8
-      if: ${{steps.buildx.outputs.git_push}} == 'true'
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        push-branch: 'main'
-        commit-message: ${{ steps.buildx.outputs.git_commit }}
-        force-add: 'true'
-        files: .
-        name: actions-bot
+      id: update
+      name: Update image
+      run: | 
+          check_exist() {
+            test "$(wget -q https://registry.hub.docker.com/v1/repositories/devcto/caddy-php/tags -O - | tr -d '[]" ' | tr '}' '\n' | awk -F: '{print $3}' | grep ${1} | head -n 1)" == ""
+          }
 
+          echo "tag: ${{ matrix.image-tag }}"
+          if check_exist  ${{ matrix.image-tag }}; then
+            echo "yes"
+            echo "::set-output name=update::yes"
+          else
+            echo "no"
+            echo "::set-output name=update::no"
+          fi
+    - 
+      name: Build image and push to Docker Hub
+      if: steps.update.outputs.update == 'yes'
+      run: |
+        bash check_build.sh
