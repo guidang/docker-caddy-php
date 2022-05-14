@@ -88,9 +88,9 @@ build() {
     fi
 
     # 不使用 buildx，只编译 amd64
-    docker_tag_push
+    # docker_tag_push
 
-    # docker_build
+    docker_build
 }
 
 main() {
