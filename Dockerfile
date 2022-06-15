@@ -60,7 +60,6 @@ RUN docker-php-ext-install pdo_mysql \
         binutils \
         libgomp \
         libatomic \
-        libgphobos \
         gmp \
         isl22 \
         mpfr4 \

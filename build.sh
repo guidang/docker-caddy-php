@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ####### 构建脚本 #######
 
@@ -24,7 +24,7 @@ check_alpine_exist() {
 docker_build() {
     echo "docker buildx build ${pre_ver} vs ${full_ver}-fpm-alpine"
     
-    if [ "${pre_ver}" == "8.1" ]; then 
+    if [[ "${pre_ver}" = "8.1" ]]; then 
         docker buildx build --platform linux/amd64,linux/arm64 \
         --output "type=image,push=true" \
         --tag "${prefix}caddy-php:${full_ver}" \
@@ -57,20 +57,20 @@ docker_tag_push() {
 
     docker tag ${image_id} ${prefix}caddy-php:${pre_ver} || show_errmsg "docker tag failed"
 
-    if [ "${pre_ver}" == "8.1" ]; then 
+    if [[ "${pre_ver}" = "8.1" ]]; then 
         docker tag ${image_id} ${prefix}caddy-php:latest
     fi
 
     docker push ${prefix}caddy-php:${full_ver}
     docker push ${prefix}caddy-php:${pre_ver}
 
-    if [ "${pre_ver}" == "8.1" ]; then 
+    if [[ "${pre_ver}" = "8.1" ]]; then 
         docker push ${prefix}caddy-php:latest
     fi
 }
 
 build() {
-    if [ "${1}"x = ""x ]; then
+    if [[ -z "${1}" ]]; then
         show_errmsg "invalid argument for version"
     fi 
 
@@ -81,7 +81,7 @@ build() {
         return 
     fi
 
-    if [ "${2}"x = ""x ]; then
+    if [[ -z "${2}" ]]; then
         prefix="devcto/"
     else
         prefix="${2}"
