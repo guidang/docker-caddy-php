@@ -18,7 +18,7 @@ version_init() {
 }
 
 check_alpine_exist() {
-    test "$(wget -q https://registry.hub.docker.com/v1/repositories/php/tags -O - | tr -d '[]" ' | tr '}' '\n' | awk -F: '{print $3}' | grep ${1}-fpm-alpine | head -n 1)" == ""
+    test "$(wget -q https://hub.docker.com/v2/repositories/library/php/tags/${1}-fpm-alpine -O -  | tr ',' '\n' | grep '"name"' | tr -d '[]" ' | awk -F: '{print $2}' | grep ${1}-fpm-alpine)" == ""
 }
 
 docker_build() {

@@ -88,7 +88,7 @@ jobs:
       name: Update image
       run: | 
           check_exist() {
-            test "$(wget -q https://hub.docker.com/v2/namespaces/devcto/repositories/caddy-php/tags?page_size=20 -O -  | tr ',' '\n' | grep '"name"' | tr -d '[]" ' | awk -F: '{print $2}' | grep ${1})" == ""
+            test "$(wget -q https://hub.docker.com/v2/repositories/devcto/caddy-php/tags/${1} -O -  | tr ',' '\n' | grep '"name"' | tr -d '[]" ' | awk -F: '{print $2}' | grep ${1})" == ""
           }
 
           echo "tag: ${{ matrix.image-tag }}"
