@@ -3,17 +3,17 @@ name: docker-build-push
 on:
   push:
     paths:
-      - "Dockerfile"
-      - "build.sh"
-      - "entry.sh"
-      - ".github/workflows/docker-image.yml"
+      - 'Dockerfile'
+      - 'build.sh'
+      - 'entry.sh'
+      - '.github/workflows/docker-image.yml'
       # - ".version"
   schedule:
-    - cron: '0 0 * * *'    
-    
+    - cron: '0 0 * * *'
+
 env:
   # Use x for Docker Hub if empty. ghcr.io / docker.io
-  REGISTRY: docker.io    
+  REGISTRY: docker.io
 
 jobs:
   image_tags:
@@ -23,86 +23,80 @@ jobs:
       IMAGE_VERSION_81: ${{ steps.image_tags.outputs.IMAGE_VERSION_81 }}
       IMAGE_VERSION_80: ${{ steps.image_tags.outputs.IMAGE_VERSION_80 }}
       IMAGE_VERSION_74: ${{ steps.image_tags.outputs.IMAGE_VERSION_74 }}
-   
-    steps:
-    -
-      id: image_tags
-      name: get image tags
-      env:
-        VERSION_URL: ${{ secrets.ENV_URL }}
-      run: | 
-        version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "${1}"; }
 
-        LATEST_VERSIONS=$(curl -s https://www.php.net | sed -n '/hero-version-link/p' | head -n 3 | cut -d '>' -f3 | cut -d '<' -f1)
-        
-        for first_version in $LATEST_VERSIONS
-        do
-          if test "$(printf '%s' $first_version | grep 7.4)"; then
-            echo "::set-output name=IMAGE_VERSION_74::$first_version"
-          elif test "$(printf '%s' $first_version | grep 8.0)"; then
-            echo "::set-output name=IMAGE_VERSION_80::$first_version"
-          elif test "$(printf '%s' $first_version | grep 8.1)"; then
-            echo "::set-output name=IMAGE_VERSION_81::$first_version"
-          fi
-        done
+    steps:
+      - id: image_tags
+        name: get image tags
+        env:
+          VERSION_URL: ${{ secrets.ENV_URL }}
+        run: |
+          version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "${1}"; }
+
+          LATEST_VERSIONS=$(curl -s https://www.php.net | sed -n '/hero-version-link/p' | head -n 3 | cut -d '>' -f3 | cut -d '<' -f1)
+
+          for first_version in $LATEST_VERSIONS
+          do
+            if test "$(printf '%s' $first_version | grep 7.4)"; then
+            echo "{name}={value}" >> $GITHUB_OUTPUT
+              echo "IMAGE_VERSION_74=$first_version" >> $GITHUB_OUTPUT
+            elif test "$(printf '%s' $first_version | grep 8.0)"; then
+              echo "IMAGE_VERSION_80=$first_version" >> $GITHUB_OUTPUT
+            elif test "$(printf '%s' $first_version | grep 8.1)"; then
+              echo "IMAGE_VERSION_81=$first_version" >> $GITHUB_OUTPUT
+            fi
+          done
 
   build:
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - image_tags
 
     strategy:
       matrix:
-        php-version: [ "8.1", "8.0", "7.4" ]
+        php-version: ['8.1', '8.0', '7.4']
         include:
-          - php-version: "8.1"
+          - php-version: '8.1'
             image-tag: ${{ needs.image_tags.outputs.IMAGE_VERSION_81 }}
-          - php-version: "8.0"
+          - php-version: '8.0'
             image-tag: ${{ needs.image_tags.outputs.IMAGE_VERSION_80 }}
-          - php-version: "7.4"
+          - php-version: '7.4'
             image-tag: ${{ needs.image_tags.outputs.IMAGE_VERSION_74 }}
       fail-fast: true
 
     steps:
-    - 
-      name: Check out the repo
-      uses: actions/checkout@v2    
-      # with:
-        # token: ${{ secrets.GH_TOKEN }}      
-    - 
-      name: Login into registry ${{ env.REGISTRY }}   
-      if: github.event_name != 'pull_request'
-      uses: docker/login-action@v1      
-      with:
-        registry: ${{ env.REGISTRY }}   
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}   
-    - 
-      name: Setup QEMU
-      uses: docker/setup-qemu-action@v1
-    - 
-      name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v1
-    - 
-      id: update
-      name: Update image
-      run: | 
+      - name: Check out the repo
+        uses: actions/checkout@v2
+        # with:
+        # token: ${{ secrets.GH_TOKEN }}
+      - name: Login into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - id: update
+        name: Update image
+        run: |
           check_exist() {
             test "$(wget -q https://hub.docker.com/v2/repositories/devcto/caddy-php/tags/${1} -O -  | tr ',' '\n' | grep '"name"' | tr -d '[]" ' | awk -F: '{print $2}' | grep ${1})" == ""
           }
 
           echo "tag: ${{ matrix.image-tag }}"
           if check_exist  ${{ matrix.image-tag }}; then
-            echo "yes"
-            echo "::set-output name=update::yes"
+            echo "yes, update"
+            echo "update=yes" >> $GITHUB_OUTPUT
           else
-            echo "no"
-            echo "::set-output name=update::no"
+            echo "no, no update"
+            echo "update=no" >> $GITHUB_OUTPUT
           fi
-    - 
-      name: Build image and push to Docker Hub
-      if: steps.update.outputs.update == 'yes'
-      env:
-        PHP_VERSION: ${{ matrix.image-tag }}
-      run: |
-        bash build.sh
+      - name: Build image and push to Docker Hub
+        if: steps.update.outputs.update == 'yes'
+        env:
+          PHP_VERSION: ${{ matrix.image-tag }}
+        run: |
+          bash build.sh
