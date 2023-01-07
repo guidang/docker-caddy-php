@@ -20,9 +20,9 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
+      IMAGE_VERSION_82: ${{ steps.image_tags.outputs.IMAGE_VERSION_82 }}
       IMAGE_VERSION_81: ${{ steps.image_tags.outputs.IMAGE_VERSION_81 }}
       IMAGE_VERSION_80: ${{ steps.image_tags.outputs.IMAGE_VERSION_80 }}
-      IMAGE_VERSION_74: ${{ steps.image_tags.outputs.IMAGE_VERSION_74 }}
 
     steps:
       - id: image_tags
@@ -36,13 +36,12 @@ jobs:
 
           for first_version in $LATEST_VERSIONS
           do
-            if test "$(printf '%s' $first_version | grep 8.2)"; then
-            echo "{name}={value}" >> $GITHUB_OUTPUT
-              echo "IMAGE_VERSION_82=$first_version" >> $GITHUB_OUTPUT
-            elif test "$(printf '%s' $first_version | grep 8.0)"; then
+            if test "$(printf '%s' $first_version | grep 8.0)"; then
               echo "IMAGE_VERSION_80=$first_version" >> $GITHUB_OUTPUT
             elif test "$(printf '%s' $first_version | grep 8.1)"; then
               echo "IMAGE_VERSION_81=$first_version" >> $GITHUB_OUTPUT
+            elif test "$(printf '%s' $first_version | grep 8.2)"; then
+              echo "IMAGE_VERSION_82=$first_version" >> $GITHUB_OUTPUT
             fi
           done
 
