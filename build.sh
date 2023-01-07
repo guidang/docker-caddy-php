@@ -57,14 +57,14 @@ docker_tag_push() {
 
     docker tag ${image_id} ${prefix}caddy-php:${pre_ver} || show_errmsg "docker tag failed"
 
-    if [[ "${pre_ver}" = "8.1" ]]; then 
+    if [[ "${pre_ver}" = "8.2" ]]; then 
         docker tag ${image_id} ${prefix}caddy-php:latest
     fi
 
     docker push ${prefix}caddy-php:${full_ver}
     docker push ${prefix}caddy-php:${pre_ver}
 
-    if [[ "${pre_ver}" = "8.1" ]]; then 
+    if [[ "${pre_ver}" = "8.2" ]]; then 
         docker push ${prefix}caddy-php:latest
     fi
 }
