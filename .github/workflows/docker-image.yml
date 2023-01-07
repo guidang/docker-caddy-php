@@ -36,9 +36,9 @@ jobs:
 
           for first_version in $LATEST_VERSIONS
           do
-            if test "$(printf '%s' $first_version | grep 7.4)"; then
+            if test "$(printf '%s' $first_version | grep 8.2)"; then
             echo "{name}={value}" >> $GITHUB_OUTPUT
-              echo "IMAGE_VERSION_74=$first_version" >> $GITHUB_OUTPUT
+              echo "IMAGE_VERSION_82=$first_version" >> $GITHUB_OUTPUT
             elif test "$(printf '%s' $first_version | grep 8.0)"; then
               echo "IMAGE_VERSION_80=$first_version" >> $GITHUB_OUTPUT
             elif test "$(printf '%s' $first_version | grep 8.1)"; then
